@@ -16,7 +16,7 @@ public class FINDTHEM : MonoBehaviour
     }
     private void Update()
     {
-        if (!GetComponent<AudioSource>().isPlaying)
+        if (!GetComponent<AudioSource>().isPlaying || Input.anyKeyDown)
         {
             gameObject.SetActive(false);
             good.SetActive(true);
