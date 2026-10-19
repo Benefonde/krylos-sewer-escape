@@ -15,14 +15,21 @@ public class Player : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         StartCoroutine(CheckDayTimeThing());
+
+        day.Play();
+        night.Play();
+        RenderSettings.fogStartDistance = 900;
+        RenderSettings.fogEndDistance = 1000;
+        RenderSettings.fog = true;
+        day.time = night.time;
     }
 
     void Update()
     {
         dayTimer -= Time.deltaTime / dayLength;
         hungar.value = dayTimer;
-        dayTxt.text = $"Day {12-Mathf.Ceil(dayTimer)}";
-
+        dayTxt.text = $"Day {13-Mathf.Ceil(dayTimer)}";
+        if (Input.GetMouseButtonDown(0)) Interact();
         PlayerMooove();
     }
 
@@ -37,11 +44,11 @@ public class Player : MonoBehaviour
 
     void PlayerMooove() //i took bits from my older code lol
     {
-        if (!tc.isGrounded) gravity -= 80 * Time.deltaTime;
+        if (!tc.isGrounded) gravity -= 50 * Time.deltaTime;
         else if (tc.isGrounded && Input.GetKeyDown(KeyCode.Space))
         {
             tc.Move(Vector3.up * 0.1f);
-            gravity = 24;
+            gravity = 15;
         }
 
         Vector3 vertical = Vector3.up * gravity;
@@ -66,31 +73,35 @@ public class Player : MonoBehaviour
         nightTime = night;
         if (night)
         {
-            for (byte i = 0; i < 60; i++)
+            for (byte i = 0; i < 120; i++)
             {
                 foreach (Light light in lights.GetComponentsInChildren<Light>())
                 {
-                    light.intensity -= (1/64f);
+                    light.intensity -= (1/128f);
                 }
-                day.volume -= 0.0125f;
-                this.night.volume += 0.0125f;
+                day.volume -= 0.00625f;
+                this.night.volume += 0.00625f;
                 vigenentinete.color += Color.black * (1 / 120f);
-                yield return new WaitForSeconds(1 / 15f);
+                RenderSettings.fogStartDistance = Mathf.Lerp(RenderSettings.fogStartDistance, 80, 1 / 36f);
+                RenderSettings.fogEndDistance = Mathf.Lerp(RenderSettings.fogEndDistance, 120, 1 / 36f);
+                yield return new WaitForSeconds(1 / 35f);
             }
             day.volume = 0;
             this.night.volume = 0.75f;
         }
         else
         {
-            for (byte i = 0; i < 60; i++)
+            for (byte i = 0; i < 120; i++)
             {
                 foreach (Light light in lights.GetComponentsInChildren<Light>())
                 {
-                    light.intensity += (1 / 70f);
+                    light.intensity += (1 / 128f);
                 }
-                day.volume += 0.0125f;
-                this.night.volume -= 0.0125f;
+                day.volume += 0.00625f;
+                this.night.volume -= 0.00625f;
                 vigenentinete.color -= Color.black * (1/120f);
+                RenderSettings.fogStartDistance = Mathf.Lerp(RenderSettings.fogStartDistance, 800, 1 / 36f);
+                RenderSettings.fogEndDistance = Mathf.Lerp(RenderSettings.fogEndDistance, 1200, 1 / 36f);
                 yield return new WaitForSeconds(1 / 24f);
             }
             day.volume = 0.75f;
@@ -98,11 +109,35 @@ public class Player : MonoBehaviour
         }
     }
 
+    void Interact()
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out RaycastHit raycastHit))
+        {
+            if (raycastHit.transform.parent.name.Contains("Lever") & Vector3.Distance(raycastHit.transform.position, transform.position) < 10f & Cursor.lockState == CursorLockMode.Locked)
+            {
+                raycastHit.transform.parent.GetComponent<PullTheLeverOrWhatever>().Pully();
+            }
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        switch (other.transform.name)
+        {
+            case "speed":
+                speed += 4;
+                aud.PlayOneShot(speedbonus);
+                break;
+        }
+        if (other.tag == "item") other.gameObject.SetActive(false);
+    }
+
     public Slider hungar;
     public TMP_Text dayTxt;
     [SerializeField]
     float dayTimer = 12;
-    public int dayLength = 480*2;
+    public int dayLength = 480;
 
     CharacterController tc;
     Transform cam;
@@ -117,4 +152,7 @@ public class Player : MonoBehaviour
     public GameObject lights;
     public AudioSource day, night;
     bool nightTime;
+
+    public AudioSource aud;
+    public AudioClip speedbonus;
 }
