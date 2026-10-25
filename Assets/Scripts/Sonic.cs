@@ -7,6 +7,7 @@ public class Sonic : MonoBehaviour
     public void OuttaHere() => StartCoroutine(ImOuttaHere());
     IEnumerator ImOuttaHere()
     {
+        outtaHere = true;
         GetComponent<AudioSource>().ignoreListenerPause = true;
         GetComponent<AudioSource>().Play();
         GetComponent<Animator>().SetTrigger("outtaHere");
@@ -24,6 +25,16 @@ public class Sonic : MonoBehaviour
         AudioListener.pause = false;
         UnityEngine.SceneManagement.SceneManager.LoadScene(0);
     }
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape) && outtaHere)
+        {
+            Time.timeScale = 1;
+            AudioListener.pause = false;
+            UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+        }
+    }
     RectTransform rt;
     float gravit = 21.2f;
+    bool outtaHere;
 }

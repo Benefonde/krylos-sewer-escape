@@ -12,6 +12,8 @@ public class Player : MonoBehaviour
         cam = Camera.main.transform;
         dayTimer = dayAmount - 0.15f;
 
+        hungar.maxValue = dayAmount;
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         StartCoroutine(CheckDayTimeThing());
@@ -189,11 +191,11 @@ public class Player : MonoBehaviour
 
     IEnumerator Cakes()
     {
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.2f);
         for (int i = 0; i < 25; i++)
         {
-            foundThem.color -= new Color(0, 0, 0, 1 / 25f);
-            yield return new WaitForSeconds(1 / 24f);
+            foundThem.color -= new Color(0, 0, 0, 1 / 24f);
+            yield return new WaitForSeconds(1 / 50f);
         }
     }
 
