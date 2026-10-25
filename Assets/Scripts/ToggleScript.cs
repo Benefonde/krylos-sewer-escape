@@ -8,14 +8,18 @@ public class ToggleScript : MonoBehaviour
     void Start()
     {
         if (usePlayerPrefPlsss) ON = (byte)PlayerPrefs.GetInt(playerPref);
+        if (playerPref == "fullscreen") ON = (byte)(Screen.fullScreenMode == FullScreenMode.FullScreenWindow ? 1 : 0);
+        hand.SetActive(ON == 1);
     }
 
     public void Change()
     {
         ON = (byte)(1-ON);
+        hand.SetActive(ON == 1);
         switch (playerPref)
         {
             case "fullscreen": Fullscreen(); break;
+            case "reset data": PlayerPrefs.DeleteAll(); UnityEngine.SceneManagement.SceneManager.LoadScene(0); break;
         }
     }
 

@@ -10,7 +10,7 @@ public class Player : MonoBehaviour
     {
         tc = GetComponent<CharacterController>();
         cam = Camera.main.transform;
-        dayTimer -= 0.15f;
+        dayTimer = dayAmount - 0.15f;
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -28,9 +28,24 @@ public class Player : MonoBehaviour
     {
         dayTimer -= Time.deltaTime / dayLength;
         hungar.value = dayTimer;
-        dayTxt.text = $"Day {13-Mathf.Ceil(dayTimer)}";
+        dayTxt.text = $"Day {dayAmount+1-Mathf.Ceil(dayTimer)}";
         if (Input.GetMouseButtonDown(0)) Interact();
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            pause.SetActive(!pause.activeSelf);
+            Time.timeScale = pause.activeSelf ? 0 : 1;
+            Cursor.lockState = pause.activeSelf ? CursorLockMode.None : CursorLockMode.Locked;
+            Cursor.visible = pause.activeSelf;
+            AudioListener.pause = pause.activeSelf;
+        }
         PlayerMooove();
+
+        if (transform.position.y < -50) dayTimer = 0;
+
+        if (dayTimer <= 0)
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene(2);
+        }
     }
 
     IEnumerator CheckDayTimeThing()
@@ -44,12 +59,15 @@ public class Player : MonoBehaviour
 
     void PlayerMooove() //i took bits from my older code lol
     {
-        if (!tc.isGrounded) gravity -= 50 * Time.deltaTime;
-        else if (tc.isGrounded && Input.GetKeyDown(KeyCode.Space))
+        if (!tc.isGrounded) gravity -= (swimmy ? 15 : 50) * Time.deltaTime;
+        else if (tc.isGrounded && Input.GetKeyDown(KeyCode.Space) && !swimmy)
         {
             tc.Move(Vector3.up * 0.1f);
             gravity = 15;
         }
+        if (swimmy && Input.GetKey(KeyCode.Space)) gravity = 8;
+
+        gravity = Mathf.Clamp(gravity, (swimmy ? -15 : -75), 99);
 
         Vector3 vertical = Vector3.up * gravity;
         Vector3 x = transform.right * Input.GetAxisRaw("Horizontal");
@@ -59,6 +77,7 @@ public class Player : MonoBehaviour
     }
     private void LateUpdate()
     {
+        if (Time.timeScale == 0) return;
         Vector2 mouseRotation = new Vector2(Input.GetAxis("Mouse Y"), -Input.GetAxis("Mouse X")); //taken from bbs2 lol
         cameraRotation += -mouseRotation * mouseSensitivity;
         cameraRotation = new Vector2(Mathf.Clamp(cameraRotation.x, -80, 80), cameraRotation.y);
@@ -81,8 +100,8 @@ public class Player : MonoBehaviour
                 }
                 day.volume -= 0.00625f;
                 this.night.volume += 0.00625f;
-                vigenentinete.color += Color.black * (1 / 120f);
-                RenderSettings.fogStartDistance = Mathf.Lerp(RenderSettings.fogStartDistance, 80, 1 / 36f);
+                vigenentinete.color += Color.black * (1 / 180f);
+                RenderSettings.fogStartDistance = Mathf.Lerp(RenderSettings.fogStartDistance, 50, 1 / 36f);
                 RenderSettings.fogEndDistance = Mathf.Lerp(RenderSettings.fogEndDistance, 120, 1 / 36f);
                 yield return new WaitForSeconds(1 / 35f);
             }
@@ -99,7 +118,7 @@ public class Player : MonoBehaviour
                 }
                 day.volume += 0.00625f;
                 this.night.volume -= 0.00625f;
-                vigenentinete.color -= Color.black * (1/120f);
+                vigenentinete.color -= Color.black * (1/180f);
                 RenderSettings.fogStartDistance = Mathf.Lerp(RenderSettings.fogStartDistance, 800, 1 / 36f);
                 RenderSettings.fogEndDistance = Mathf.Lerp(RenderSettings.fogEndDistance, 1200, 1 / 36f);
                 yield return new WaitForSeconds(1 / 24f);
@@ -114,7 +133,7 @@ public class Player : MonoBehaviour
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit raycastHit))
         {
-            if (raycastHit.transform.parent.name.Contains("Lever") & Vector3.Distance(raycastHit.transform.position, transform.position) < 10f & Cursor.lockState == CursorLockMode.Locked)
+            if (raycastHit.transform.parent.name.Contains("Lever") & Vector3.Distance(raycastHit.transform.position, transform.position) < 15f & Cursor.lockState == CursorLockMode.Locked)
             {
                 raycastHit.transform.parent.GetComponent<PullTheLeverOrWhatever>().Pully();
             }
@@ -126,33 +145,83 @@ public class Player : MonoBehaviour
         switch (other.transform.name)
         {
             case "speed":
-                speed += 4;
+                speed += 6;
                 aud.PlayOneShot(speedbonus);
+                break;
+            case "cake":
+                foundThem.color = Color.white;
+                aud.PlayOneShot(foundCake);
+                StartCoroutine(Cakes());
+                PlayerPrefs.SetInt($"cake{other.transform.GetChild(0).name}", 1);
+                cakes++;
+                if (cakes >= 3) PlayerPrefs.SetInt("FoundMyHiddenCakes", 1);
+                break;
+            case "EscapeFromHairBasics":
+                print((12 - dayTimer) * dayLength);
+                if (PlayerPrefs.GetFloat("time", 3599.999f) > (int)((12 - dayTimer) * dayLength)) PlayerPrefs.SetFloat("time", (dayAmount-dayTimer)*dayLength);
+                UnityEngine.SceneManagement.SceneManager.LoadScene(3);
+                break;
+            case "Springy":
+                if (gravity <= -5)
+                {
+                    other.transform.GetComponent<AudioSource>().Play();
+                    gravity = 40;
+                }
                 break;
         }
         if (other.tag == "item") other.gameObject.SetActive(false);
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        if (other.transform.name == "WaterStream")
+        {
+            swimmy = true;
+        }
+    }
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.transform.name == "WaterStream")
+        {
+            swimmy = false;
+        }
+    }
+
+    IEnumerator Cakes()
+    {
+        yield return new WaitForSeconds(0.5f);
+        for (int i = 0; i < 25; i++)
+        {
+            foundThem.color -= new Color(0, 0, 0, 1 / 25f);
+            yield return new WaitForSeconds(1 / 24f);
+        }
     }
 
     public Slider hungar;
     public TMP_Text dayTxt;
     [SerializeField]
     float dayTimer = 12;
+    public int dayAmount = 12;
     public int dayLength = 480;
 
     CharacterController tc;
     Transform cam;
-    Vector2 cameraRotation;
+    public Vector2 cameraRotation;
     float mouseSensitivity = 4;
 
     float gravity;
-
+    bool swimmy;
     public int speed;
 
+    public GameObject pause;
     public Image vigenentinete;
     public GameObject lights;
     public AudioSource day, night;
     bool nightTime;
 
     public AudioSource aud;
-    public AudioClip speedbonus;
+    public AudioClip speedbonus, foundCake;
+
+    byte cakes;
+    public Image foundThem;
 }
