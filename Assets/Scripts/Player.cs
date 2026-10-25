@@ -34,6 +34,13 @@ public class Player : MonoBehaviour
         if (Input.GetMouseButtonDown(0)) Interact();
         if (Input.GetKeyDown(KeyCode.Escape))
         {
+            if (FindObjectOfType<Sonic>() != null) if (FindObjectOfType<Sonic>().outtaHere)
+            {
+                Time.timeScale = 1;
+                AudioListener.pause = false;
+                UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+                return;
+            }
             pause.SetActive(!pause.activeSelf);
             Time.timeScale = pause.activeSelf ? 0 : 1;
             Cursor.lockState = pause.activeSelf ? CursorLockMode.None : CursorLockMode.Locked;

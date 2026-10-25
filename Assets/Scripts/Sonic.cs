@@ -25,16 +25,7 @@ public class Sonic : MonoBehaviour
         AudioListener.pause = false;
         UnityEngine.SceneManagement.SceneManager.LoadScene(0);
     }
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Escape) && outtaHere)
-        {
-            Time.timeScale = 1;
-            AudioListener.pause = false;
-            UnityEngine.SceneManagement.SceneManager.LoadScene(0);
-        }
-    }
     RectTransform rt;
     float gravit = 21.2f;
-    bool outtaHere;
+    public bool outtaHere;
 }
