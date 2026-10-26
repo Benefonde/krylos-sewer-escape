@@ -55,6 +55,35 @@ public class Player : MonoBehaviour
         {
             UnityEngine.SceneManagement.SceneManager.LoadScene(2);
         }
+
+        if (nightTime)
+        {
+            scaryLarry -= Time.deltaTime;
+            if (scaryLarry <= 0)
+            {
+                scaryLarry = 1;
+                if (Random.Range(0, 50) == 28)
+                {
+                    OogaBooga();
+                    scaryLarry += 9;
+                }
+            }
+        }
+    }
+
+    void OogaBooga()
+    {
+        AudioSource AH = Instantiate(scary, transform.position, Quaternion.identity).GetComponent<AudioSource>();
+        AH.gameObject.SetActive(true);
+        switch (Random.Range(0, 4))
+        {
+            case 0: AH.transform.Translate(Vector3.up * 5); break;
+            case 1: AH.transform.Translate(Vector3.left * 20); break;
+            case 2: AH.transform.Translate(Vector3.forward * -20); break;
+            case 3: AH.transform.Translate(Vector3.right * 20); break;
+        }
+        AH.clip = scaries[Random.Range(0, scaries.Length)];
+        AH.Play();
     }
 
     IEnumerator CheckDayTimeThing()
@@ -108,14 +137,14 @@ public class Player : MonoBehaviour
                     light.intensity -= (1/128f);
                 }
                 day.volume -= 0.00625f;
-                this.night.volume += 0.00625f;
+                this.night.volume += 0.0041666f;
                 vigenentinete.color += Color.black * (1 / 180f);
                 RenderSettings.fogStartDistance = Mathf.Lerp(RenderSettings.fogStartDistance, 50, 1 / 36f);
                 RenderSettings.fogEndDistance = Mathf.Lerp(RenderSettings.fogEndDistance, 120, 1 / 36f);
                 yield return new WaitForSeconds(1 / 35f);
             }
             day.volume = 0;
-            this.night.volume = 0.75f;
+            this.night.volume = 0.5f;
         }
         else
         {
@@ -126,7 +155,7 @@ public class Player : MonoBehaviour
                     light.intensity += (1 / 128f);
                 }
                 day.volume += 0.00625f;
-                this.night.volume -= 0.00625f;
+                this.night.volume -= 0.0041666f;
                 vigenentinete.color -= Color.black * (1/180f);
                 RenderSettings.fogStartDistance = Mathf.Lerp(RenderSettings.fogStartDistance, 800, 1 / 36f);
                 RenderSettings.fogEndDistance = Mathf.Lerp(RenderSettings.fogEndDistance, 1200, 1 / 36f);
@@ -228,9 +257,12 @@ public class Player : MonoBehaviour
     public AudioSource day, night;
     bool nightTime;
 
-    public AudioSource aud;
+    public AudioSource aud, scary;
     public AudioClip speedbonus, foundCake;
+    public AudioClip[] scaries;
 
     byte cakes;
     public Image foundThem;
+
+    float scaryLarry = 1;
 }

@@ -12,6 +12,8 @@ public class MenuScript : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         if (GameOver) return;
+        volumey.value = PlayerPrefs.GetFloat("volumee", 0.75f);
+        Looudnoises();
         System.TimeSpan timee = System.TimeSpan.FromSeconds(PlayerPrefs.GetFloat("time", 3599.999f));
         time.text = string.Format("Best Time:\n{0:00}:{1:00}:{2:000}", timee.Minutes, timee.Seconds, timee.Milliseconds);
         for (byte i = 0; i < cakes.Length; i++)
@@ -20,8 +22,10 @@ public class MenuScript : MonoBehaviour
         }
         PlayerPrefs.Save();
     }
+    public void Looudnoises() => AudioListener.volume = volumey.value;
 
     public bool GameOver;
     public TMPro.TMP_Text time;
     public UnityEngine.UI.Image[] cakes;
+    public UnityEngine.UI.Slider volumey;
 }
